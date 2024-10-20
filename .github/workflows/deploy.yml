@@ -14,7 +14,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -46,17 +46,21 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Log in to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: us-east-2
 
       - name: Build Docker image
         run: |
-          cd Django-Project  # Navigate to the directory with the Dockerfile
+          cd Django-Project
           docker build -t curtf0505/django-web:latest .
-      
+
+      - name: Tag Docker image for ECR
+        run: |
+          docker tag curtf0505/django-web:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
+
       - name: Push Docker image to ECR
         run: |
-          docker tag your-ecr-repo:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
 
   deploy:
