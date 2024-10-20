@@ -14,7 +14,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
-      AWS_REGION: us-east-2  # Set the region here
+      AWS_REGION: us-east-2
 
     steps:
       - name: Checkout code
@@ -48,49 +48,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step to test if AWS Secrets are correctly passed
-      - name: Check AWS Secrets
-        run: |
-          echo "Checking if AWS Secrets are properly set..."
-          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
-            echo "AWS_ACCESS_KEY_ID is not set!"
-            exit 1
-          else
-            echo "AWS_ACCESS_KEY_ID is set."
-          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
 
-          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
-            echo "AWS_SECRET_ACCESS_KEY is not set!"
-            exit 1
-          else
-            echo "AWS_SECRET_ACCESS_KEY is set."
-          fi
-
-      # AWS credentials configuration using AWS CLI directly
-      - name: Configure AWS CLI credentials manually
-        run: |
-          echo "Manually configuring AWS CLI with environment variables"
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region us-east-2
-
-      # Log in to Amazon ECR
       - name: Log in to Amazon ECR
         run: |
           aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com
 
-      # Build the Docker image
       - name: Build Docker image
         run: |
           cd Django-Project
           docker build -t curtf0505/django-web:latest .
 
-      # Tag Docker image for ECR
       - name: Tag Docker image for ECR
         run: |
           docker tag curtf0505/django-web:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
 
-      # Push Docker image to ECR
       - name: Push Docker image to ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
@@ -100,11 +77,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Update ECS service
-        uses: aws-actions/aws-cli-action@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
-          command: |
-            aws ecs update-service --cluster BlockHouse-Cluster --service django-setup --force-new-deployment
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service --cluster BlockHouse-Cluster --service django-setup --force-new-deployment
