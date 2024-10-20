@@ -46,12 +46,12 @@ jobs:
       - name: Build Docker image
         run: |
           cd Django-Project  # Navigate to the directory with the Dockerfile
-          docker build -t your-ecr-repo:latest .
+          docker build -t curtf0505/django-web:latest .
       
       - name: Push Docker image to ECR
         run: |
-          docker tag your-ecr-repo:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/your-ecr-repo:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/your-ecr-repo:latest
+          docker tag your-ecr-repo:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/curtf0505/django-web:latest
 
   deploy:
     needs: docker_build_push
@@ -65,4 +65,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
           command: |
-            aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment
+            aws ecs update-service --cluster BlockHouse-Cluster --service django-setup --force-new-deployment
