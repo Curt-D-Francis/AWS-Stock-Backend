@@ -14,6 +14,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
+      AWS_REGION: us-east-2  # Set the region here
 
     steps:
       - name: Checkout code
@@ -40,6 +41,8 @@ jobs:
   docker_build_push:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-2  # Set the region here, too
 
     steps:
       - name: Checkout code
@@ -48,11 +51,13 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          region: us-east-2
+          mask-password: true
+        env:
+          AWS_REGION: us-east-2
 
       - name: Build Docker image
         run: |
-          cd Django-Project
+          cd Django-Project 
           docker build -t curtf0505/django-web:latest .
 
       - name: Tag Docker image for ECR
@@ -76,3 +81,5 @@ jobs:
           aws-region: us-east-2
           command: |
             aws ecs update-service --cluster BlockHouse-Cluster --service django-setup --force-new-deployment
+
+
