@@ -12,7 +12,7 @@ Local Setup Instructions
 Clone the repository:
 
 Steps:
-git clone https://github.com/your-repository.git
+git clone https://github.com/https://github.com/Curt-D-Francis/AWS-Stock-Backend/.git
 cd your-repository
 Install dependencies:
 
